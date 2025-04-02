@@ -1,5 +1,8 @@
+![virtio_info_1](https://github.com/user-attachments/assets/fab72be2-04ae-435b-87b1-afefba2fdff9)
+![virtio_info_2](https://github.com/user-attachments/assets/5d6a19e1-b7e7-4801-b013-a07eb7476386)
+
 # virtio-info
-FIXME
+show information about VirtIO devices
 
 ## Features
 
