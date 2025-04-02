@@ -1,10 +1,11 @@
-![virtio_info_1](https://github.com/user-attachments/assets/fab72be2-04ae-435b-87b1-afefba2fdff9)
-![virtio_info_2](https://github.com/user-attachments/assets/5d6a19e1-b7e7-4801-b013-a07eb7476386)
+![virtio_info_screen](https://github.com/user-attachments/assets/ec4858ff-c961-42b8-894b-e43cf8a0eb98)
 
 # virtio-info
 show information about VirtIO devices
 
 ## Features
+* listing registered VirtIO devices
+* status/features bits decoding (currently for network devices only)
 
 ## Requirements
  * compiler supporting `C++20`
@@ -26,9 +27,13 @@ make -C build -j
 ```
 
 ## Usage
+`./virtio-info -l` - list all registered devices and their types  
+`./virtio-info -i <virtio device name>` - show detailed info about the status/features of a specific device
 
 ## References
 The following libraries are used by this tool:
  * [fmt](https://github.com/fmtlib/fmt) - text formatting
  * [CLI11](https://github.com/CLIUtils/CLI11) - command line parsing
+ * [ftxui](https://github.com/ArthurSonzogni/FTXUI) - visual representation
+ * [magic_enum](https://github.com/Neargye/magic_enum) - reflection for enums
 
