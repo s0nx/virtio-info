@@ -3,12 +3,13 @@
 
 #pragma once
 
+#include "config.h"
 #include "virtio_bus.h"
 
 namespace ui {
 
 void ListVirtIODevices();
 
-void VirtIODevDetailedInfo(const std::string &dev_name);
+void VirtIODevDetailedInfo();
 
 } // namespace ui

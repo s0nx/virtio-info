@@ -7,17 +7,17 @@
 #include "config.h"
 #include "ui.h"
 
-cfg::CmdLOpts    cmdline_options;
+cfg::CmdLOpts cmdl_opts;
 
 int main(int argc, char *argv[])
 {
     try {
-        cfg::ParseCmdLineOptions(cmdline_options, argc, argv);
+        cfg::ParseCmdLineOptions(cmdl_opts, argc, argv);
 
-        if (cmdline_options.mode_ == cfg::OperationMode::ListAvailDevs)
+        if (cmdl_opts.mode_ == cfg::OperationMode::ListAvailDevs)
             ui::ListVirtIODevices();
         else
-            ui::VirtIODevDetailedInfo(cmdline_options.target_dev_name_);
+            ui::VirtIODevDetailedInfo();
     } catch (std::exception &ex) {
         fmt::print("{}\n", ex.what());
         return EXIT_FAILURE;

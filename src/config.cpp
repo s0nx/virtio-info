@@ -33,13 +33,13 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
 {
     CLI::App app{"VirtIO devices info", "virtio-info"};
     app.get_formatter()->column_width(40);
+    app.require_option();
 
-    auto sgrp = app.add_option_group("+grp");
+    auto sgrp1 = app.add_option_group("+info");
     // hide help in group
-    sgrp->set_help_flag();
-    sgrp->require_option(1);
+    sgrp1->set_help_flag();
 
-    sgrp->add_option_function<std::string>(
+    sgrp1->add_option_function<std::string>(
             "-i,--info",
             [&](const std::string &val) {
                 cmdl_opts.mode_ = OperationMode::ShowDevInfo;
@@ -49,7 +49,33 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
         ->option_text("< existing device name (e.g. virtio0) >")
         ->check(ExistingDeviceValidator());
 
-    sgrp->add_flag_callback(
+    sgrp1->add_flag_callback(
+            "--no-desc",
+            [&]() {
+                cmdl_opts.no_feat_desc_ = true;
+            },
+            "don't show features bits description");
+
+    sgrp1->add_flag_callback(
+            "--feat-set",
+            [&]() {
+                cmdl_opts.feat_set_bits_only_ = true;
+            },
+            "display only the feature bits that have been set");
+
+    sgrp1->add_flag_callback(
+            "--no-status",
+            [&]() {
+                cmdl_opts.no_status_ = true;
+            },
+            "don't show device status bits decoding");
+
+    auto sgrp2 = app.add_option_group("+list");
+    // hide help in group
+    sgrp2->set_help_flag();
+    sgrp2->excludes(sgrp1);
+
+    sgrp2->add_flag_callback(
             "-l,--list",
             [&]() {
                 cmdl_opts.mode_ = OperationMode::ListAvailDevs;

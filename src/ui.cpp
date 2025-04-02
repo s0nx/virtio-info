@@ -3,18 +3,15 @@
 
 #include "ui.h"
 #include <fmt/core.h>
-#include <fmt/color.h>
 
 #include <vector>
 
-#include <ftxui/dom/elements.hpp>
 #include <ftxui/dom/table.hpp>
 #include <ftxui/screen/screen.hpp>
 
-#include "ftxui/dom/node.hpp"
-#include "ftxui/screen/color.hpp"
-
 #include "magic_enum/magic_enum.hpp"
+
+extern cfg::CmdLOpts cmdl_opts;
 
 using namespace ftxui;
 
@@ -145,6 +142,8 @@ VirtIONetDevFeaturesTablePopulate(const uint64_t features, std::vector<Elements>
         Elements row_elems;
 
         bool bit_is_set = (features >> magic_enum::enum_integer(field)) & 0x1;
+        if (!bit_is_set && cmdl_opts.feat_set_bits_only_)
+            continue;
 
         auto idx_txt_elem = text(fmt::format("[{}]", e_to_type(field)));
         if (bit_is_set)
@@ -174,11 +173,14 @@ VirtIONetDevFeaturesTablePopulate(const uint64_t features, std::vector<Elements>
 
         row_elems.push_back(bit_name_elem);
 
-        auto field_desc_elem = text(std::string{virtio::VirtIONetDevFeatureDesc(field)});
-        if (!bit_is_set)
-            field_desc_elem |= dim;
+        if (!cmdl_opts.no_feat_desc_) {
+            auto field_desc_elem =
+                text(std::string{virtio::VirtIONetDevFeatureDesc(field)});
+            if (!bit_is_set)
+                field_desc_elem |= dim;
 
-        row_elems.push_back(field_desc_elem);
+            row_elems.push_back(field_desc_elem);
+        }
 
         tbl.push_back(std::move(row_elems));
     }
@@ -202,7 +204,10 @@ VirtIODevCreateFeaturesElement(const uint64_t dev_features,
                                const virtio::VirtIODevType dev_type)
 {
     std::vector<Elements> tbl;
-    tbl.push_back({text("bit "), text("ftype "), text("name "), text("desc ")});
+    if (cmdl_opts.no_feat_desc_)
+        tbl.push_back({text("bit "), text("ftype "), text("name ")});
+    else
+        tbl.push_back({text("bit "), text("ftype "), text("name "), text("desc ")});
 
     VirtIODevFeaturesTablePopulate(dev_features, dev_type, tbl);
     Element elem;
@@ -232,22 +237,22 @@ VirtIODevCreateFeaturesElement(const uint64_t dev_features,
 }
 
 
-void VirtIODevDetailedInfo(const std::string &dev_name)
+void VirtIODevDetailedInfo()
 {
     std::filesystem::path virtio_path {virtio::virtio_devs_path};
-    auto dev_path = virtio_path / dev_name;
+    auto dev_path = virtio_path / cmdl_opts.target_dev_name_;
 
     auto dev_desc = virtio::CreateDevDesc(dev_path);
 
     auto dev_desc_elem = hbox({
             text(" Device ->"),
             separatorEmpty(),
-            text(dev_name) | bold,
+            text(cmdl_opts.target_dev_name_) | bold,
             separatorEmpty(),
             text(fmt::format("type [{:#2}]:", e_to_type(dev_desc.dev_type_))),
             separatorEmpty(),
             text(fmt::format("{}", virtio::VirtIODevTypeName(dev_desc.dev_type_)))
-            | inverted,
+            | bold,
             separatorEmpty(),
             text(dev_desc.aux_info_.empty() ?
                  "" : fmt::format("({})", dev_desc.aux_info_)) |
@@ -255,16 +260,15 @@ void VirtIODevDetailedInfo(const std::string &dev_name)
             filler()
     });
 
-    auto status_element = VirtIODevCreateStatusElement(dev_desc.status_);
-    auto features_element = VirtIODevCreateFeaturesElement(dev_desc.features_,
-                                                           dev_desc.dev_type_);
+    Elements elems {dev_desc_elem};
 
-    auto doc = vbox({
-        dev_desc_elem,
-        status_element,
-        features_element
-    });
+    if (!cmdl_opts.no_status_)
+        elems.push_back(VirtIODevCreateStatusElement(dev_desc.status_));
 
+    elems.push_back(VirtIODevCreateFeaturesElement(dev_desc.features_,
+                                                   dev_desc.dev_type_));
+
+    auto doc = vbox(elems);
     auto screen = Screen::Create(Dimension::Fit(doc, true));
     Render(screen, doc);
 
