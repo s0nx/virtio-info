@@ -1,11 +1,8 @@
 ![virtio_info_screen](https://github.com/user-attachments/assets/ec4858ff-c961-42b8-894b-e43cf8a0eb98)
 
 # virtio-info
-show information about VirtIO devices
-
-## Features
-* listing registered VirtIO devices
-* status/features bits decoding (currently for network devices only)
+This simple tool allows to quickly identify all VirtIO devices currently registered.
+For a given device, features bits decoding makes it easy to understand which particular features have been negotiated between device and driver.
 
 ## Requirements
  * compiler supporting `C++20`
@@ -27,8 +24,19 @@ make -C build -j
 ```
 
 ## Usage
-`./virtio-info -l` - list all registered devices and their types  
-`./virtio-info -i <virtio device name>` - show detailed info about the status/features of a specific device
+```
+virtio-info [OPTIONS]
+
+OPTIONS:
+  -h,        --help                     Print this help message and exit 
+  -v,        --version                  Print version and exit 
+  -i,        --info < existing device name (e.g. virtio0) > 
+                                        show detailed info about specific VirtIO device 
+             --no-desc                  don't show features bits description 
+             --feat-set                 display only the feature bits that have been set 
+             --no-status                don't show device status bits decoding 
+  -l,        --list                     show registered VirtIO devices 
+```
 
 ## References
 The following libraries are used by this tool:
@@ -36,4 +44,3 @@ The following libraries are used by this tool:
  * [CLI11](https://github.com/CLIUtils/CLI11) - command line parsing
  * [ftxui](https://github.com/ArthurSonzogni/FTXUI) - visual representation
  * [magic_enum](https://github.com/Neargye/magic_enum) - reflection for enums
-
