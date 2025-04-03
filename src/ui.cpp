@@ -20,6 +20,10 @@ namespace ui {
 void ListVirtIODevices()
 {
     auto devs = virtio::GetVirtioDevMap();
+    if (devs.empty()) {
+        fmt::print("No registered VirtIO devices found\n");
+        return;
+    }
 
     std::vector<Elements> tbl;
 
