@@ -11,12 +11,14 @@ enum class OperationMode
 {
     ListAvailDevs,
     ShowDevInfo,
+    FeaturesDiff
 };
 
 struct CmdLOpts
 {
     OperationMode              mode_ {OperationMode::ListAvailDevs};
-    std::string     target_dev_name_ {};
+    std::string      first_dev_name_ {};
+    std::string     second_dev_name_ {};
     // do not show bit description
     bool               no_feat_desc_ {false};
     // show only the features bits that have been set

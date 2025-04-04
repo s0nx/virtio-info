@@ -9,7 +9,7 @@
 namespace ui {
 
 void ListVirtIODevices();
-
 void VirtIODevDetailedInfo();
+void VirtIODevFeaturesDiff();
 
 } // namespace ui

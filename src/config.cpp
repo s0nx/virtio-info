@@ -43,7 +43,7 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
             "-i,--info",
             [&](const std::string &val) {
                 cmdl_opts.mode_ = OperationMode::ShowDevInfo;
-                cmdl_opts.target_dev_name_ = val;
+                cmdl_opts.first_dev_name_ = val;
             },
             "show detailed info about specific VirtIO device")
         ->option_text("< existing device name (e.g. virtio0) >")
@@ -82,6 +82,22 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
             },
             "show registered VirtIO devices")
         ->allow_extra_args(false);
+
+    auto sgrp3 = app.add_option_group("+diff");
+    sgrp3->set_help_flag();
+    sgrp3->excludes(sgrp1);
+    sgrp3->excludes(sgrp2);
+    sgrp3->add_option_function<std::pair<std::string, std::string>>(
+            "-d,--diff",
+            [&](const std::pair<std::string, std::string> &val) {
+                cmdl_opts.mode_ = OperationMode::FeaturesDiff;
+                cmdl_opts.first_dev_name_ = val.first;
+                cmdl_opts.second_dev_name_ = val.second;
+            },
+            "highlight features difference for two devices A and B")
+        ->option_text("<device A> <device B>")
+        ->check(ExistingDeviceValidator().application_index(0))
+        ->check(ExistingDeviceValidator().application_index(1));
 
     app.add_flag("-v, --version",
             [](std::int64_t) {

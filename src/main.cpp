@@ -16,8 +16,10 @@ int main(int argc, char *argv[])
 
         if (cmdl_opts.mode_ == cfg::OperationMode::ListAvailDevs)
             ui::ListVirtIODevices();
-        else
+        else if (cmdl_opts.mode_ == cfg::OperationMode::ShowDevInfo)
             ui::VirtIODevDetailedInfo();
+        else
+            ui::VirtIODevFeaturesDiff();
     } catch (std::exception &ex) {
         fmt::print("{}\n", ex.what());
         return EXIT_FAILURE;

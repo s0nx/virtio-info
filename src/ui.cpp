@@ -138,66 +138,132 @@ VirtIODevCreateStatusElement(const uint32_t dev_status)
     return status_elem;
 }
 
+template <typename T, std::size_t S, typename F>
 static void
-VirtIONetDevFeaturesTablePopulate(const uint64_t features, std::vector<Elements> &tbl)
+DevFeaturesTablePopulate(const uint64_t dev1_features, const uint64_t dev2_features,
+                         bool diff_mode,
+                         std::vector<Elements> &tbl,
+                         const std::array<T, S> &arr, F desc_fun)
 {
-    constexpr auto vfeature_fields = magic_enum::enum_values<virtio::VirtIONetFeature>();
-    for (const auto &field : vfeature_fields) {
-        Elements row_elems;
+    if (!diff_mode) {
+        for (const auto &field : arr) {
+            Elements row_elems;
 
-        bool bit_is_set = (features >> magic_enum::enum_integer(field)) & 0x1;
-        if (!bit_is_set && cmdl_opts.feat_set_bits_only_)
-            continue;
+            bool bit_is_set = (dev1_features >> magic_enum::enum_integer(field)) & 0x1;
+            if (!bit_is_set && cmdl_opts.feat_set_bits_only_)
+                continue;
 
-        auto idx_txt_elem = text(fmt::format("[{}]", e_to_type(field)));
-        if (bit_is_set)
-            idx_txt_elem |= bold;
-        else
-            idx_txt_elem |= dim;
+            auto idx_txt_elem = text(fmt::format("[{}]", e_to_type(field)));
+            if (bit_is_set)
+                idx_txt_elem |= bold;
+            else
+                idx_txt_elem |= dim;
 
-        auto idx_elem = hbox({
-            filler(),
-            idx_txt_elem
-        });
-        row_elems.push_back(idx_elem);
+            auto idx_elem = hbox({
+                filler(),
+                idx_txt_elem
+            });
+            row_elems.push_back(idx_elem);
 
-        // feature type (device-specific or transport-specific)
-        bool is_feature_transport_specific = virtio::FeatureBitIsTransport(e_to_type(field));
+            // feature type (device-specific or transport-specific)
+            bool is_feature_transport_specific =
+                virtio::FeatureBitIsTransport(e_to_type(field));
 
-        auto f_type_elem = text(fmt::format("{:#>1}",
-                                            is_feature_transport_specific ? 'T' : 'D' ));
-        row_elems.push_back(f_type_elem);
+            auto f_type_elem = text(
+                    fmt::format("{:#>1}", is_feature_transport_specific ? 'T' : 'D' ));
+            row_elems.push_back(f_type_elem);
 
-        auto bit_name_elem = text(std::string(magic_enum::enum_name(field)));
-        if (bit_is_set) {
-            bit_name_elem |= bgcolor(Color::Green) | color(Color::Grey15);
-        } else {
-            bit_name_elem |= dim;
+            auto bit_name_elem = text(std::string(magic_enum::enum_name(field)));
+            if (bit_is_set) {
+                bit_name_elem |= bgcolor(Color::Green) | color(Color::Grey15);
+            } else {
+                bit_name_elem |= dim;
+            }
+
+            row_elems.push_back(bit_name_elem);
+
+            if (!cmdl_opts.no_feat_desc_) {
+                auto field_desc_elem =
+                    text(std::string{desc_fun(field)});
+                if (!bit_is_set)
+                    field_desc_elem |= dim;
+
+                row_elems.push_back(field_desc_elem);
+            }
+
+            tbl.push_back(std::move(row_elems));
         }
+    } else {
+        for (const auto &field : arr) {
+            Elements row_elems;
 
-        row_elems.push_back(bit_name_elem);
+            bool dev1_bit_is_set = (dev1_features >> magic_enum::enum_integer(field)) & 0x1;
+            bool dev2_bit_is_set = (dev2_features >> magic_enum::enum_integer(field)) & 0x1;
 
-        if (!cmdl_opts.no_feat_desc_) {
-            auto field_desc_elem =
-                text(std::string{virtio::VirtIONetDevFeatureDesc(field)});
-            if (!bit_is_set)
-                field_desc_elem |= dim;
+            if (!dev1_bit_is_set && !dev2_bit_is_set)
+                continue;
 
+            auto idx_txt_elem = text(fmt::format("[{}]", e_to_type(field))) | bold;
+            auto idx_elem = hbox({
+                filler(),
+                idx_txt_elem
+            });
+            row_elems.push_back(idx_elem);
+
+            // feature type (device-specific or transport-specific)
+            bool is_feature_transport_specific =
+                virtio::FeatureBitIsTransport(e_to_type(field));
+
+            auto f_type_elem = text(
+                    fmt::format("{:#>1}", is_feature_transport_specific ? 'T' : 'D' ));
+            row_elems.push_back(f_type_elem);
+
+            auto bit_name = std::string {magic_enum::enum_name(field)};
+            auto dev1_bit_elem = text(bit_name);
+            auto dev2_bit_elem = text(bit_name);
+
+            // set for both devices
+            if (dev1_bit_is_set && dev2_bit_is_set) {
+                dev1_bit_elem |= bgcolor(Color::Green) | color(Color::Grey15);
+                dev2_bit_elem |= bgcolor(Color::Green) | color(Color::Grey15);
+            }
+
+            // set for dev1 only
+            if (dev1_bit_is_set && !dev2_bit_is_set) {
+                dev1_bit_elem |= bgcolor(Color::Yellow) | color(Color::Grey15);
+                dev2_bit_elem |= dim;
+            }
+
+            // set for dev2 only
+            if (dev2_bit_is_set && !dev1_bit_is_set) {
+                dev1_bit_elem |= dim;
+                dev2_bit_elem |= bgcolor(Color::Magenta) | color(Color::Grey15);
+            }
+
+            row_elems.push_back(dev1_bit_elem);
+            row_elems.push_back(dev2_bit_elem);
+
+            auto field_desc_elem = text(std::string{desc_fun(field)});
             row_elems.push_back(field_desc_elem);
-        }
 
-        tbl.push_back(std::move(row_elems));
+            tbl.push_back(std::move(row_elems));
+        }
     }
 }
 
 static void
-VirtIODevFeaturesTablePopulate(const uint64_t features,
+VirtIODevFeaturesTablePopulate(const uint64_t dev1_features,
+                               const uint64_t dev2_features,
+                               bool diff_mode,
                                const virtio::VirtIODevType dev_type,
                                std::vector<Elements> &tbl)
 {
     switch (dev_type) {
     case virtio::VirtIODevType::network_card:
-        return VirtIONetDevFeaturesTablePopulate(features, tbl);
+        return DevFeaturesTablePopulate(
+                dev1_features, dev2_features, diff_mode, tbl,
+                magic_enum::enum_values<virtio::VirtIONetFeature>(),
+                virtio::VirtIONetDevFeatureDesc);
     default:
         return;
     }
@@ -209,11 +275,11 @@ VirtIODevCreateFeaturesElement(const uint64_t dev_features,
 {
     std::vector<Elements> tbl;
     if (cmdl_opts.no_feat_desc_)
-        tbl.push_back({text("bit "), text("ftype "), text("name ")});
+        tbl.push_back({text("bit "), text("ft "), text("name ")});
     else
-        tbl.push_back({text("bit "), text("ftype "), text("name "), text("desc ")});
+        tbl.push_back({text("bit "), text("ft "), text("name "), text("desc ")});
 
-    VirtIODevFeaturesTablePopulate(dev_features, dev_type, tbl);
+    VirtIODevFeaturesTablePopulate(dev_features, 0, false, dev_type, tbl);
     Element elem;
     if (tbl.size() == 1) {
         elem = text(
@@ -244,14 +310,14 @@ VirtIODevCreateFeaturesElement(const uint64_t dev_features,
 void VirtIODevDetailedInfo()
 {
     std::filesystem::path virtio_path {virtio::virtio_devs_path};
-    auto dev_path = virtio_path / cmdl_opts.target_dev_name_;
+    auto dev_path = virtio_path / cmdl_opts.first_dev_name_;
 
     auto dev_desc = virtio::CreateDevDesc(dev_path);
 
     auto dev_desc_elem = hbox({
             text(" Device ->"),
             separatorEmpty(),
-            text(cmdl_opts.target_dev_name_) | bold,
+            text(cmdl_opts.first_dev_name_) | bold,
             separatorEmpty(),
             text(fmt::format("type [{:#2}]:", e_to_type(dev_desc.dev_type_))),
             separatorEmpty(),
@@ -275,6 +341,71 @@ void VirtIODevDetailedInfo()
     auto doc = vbox(elems);
     auto screen = Screen::Create(Dimension::Fit(doc, true));
     Render(screen, doc);
+
+    screen.Print();
+    fmt::print("\n");
+}
+
+void VirtIODevFeaturesDiff()
+{
+    std::filesystem::path virtio_path {virtio::virtio_devs_path};
+
+    auto dev1_path = virtio_path / cmdl_opts.first_dev_name_;
+    auto dev2_path = virtio_path / cmdl_opts.second_dev_name_;
+
+    auto dev1_desc = virtio::CreateDevDesc(dev1_path);
+    auto dev2_desc = virtio::CreateDevDesc(dev2_path);
+
+    if (dev1_desc.dev_type_ != dev2_desc.dev_type_) {
+        fmt::print("{} and {} devices are not of the same type\n",
+                   cmdl_opts.first_dev_name_, cmdl_opts.second_dev_name_);
+        return;
+    }
+
+    if (dev1_desc.features_ == dev2_desc.features_) {
+        fmt::print("{} and {} devices have identical features negotiated\n",
+                   cmdl_opts.first_dev_name_, cmdl_opts.second_dev_name_);
+        return;
+    }
+
+    auto hdr_dev1_label_elem = hbox({
+        text(fmt::format("{} ",
+                         cmdl_opts.first_dev_name_)),
+        dev1_desc.aux_info_.empty() ? text("")
+                                    : text(fmt::format("({})", dev1_desc.aux_info_)) | bold
+    });
+
+    auto hdr_dev2_label_elem = hbox({
+        text(fmt::format("{} ",
+                         cmdl_opts.second_dev_name_)),
+        dev2_desc.aux_info_.empty() ? text("")
+                                    : text(fmt::format("({})", dev2_desc.aux_info_)) | bold
+    });
+
+    // table header for diff mode
+    std::vector<Elements> tbl;
+    tbl.push_back({text("bit "), text("ft "),
+                   hdr_dev1_label_elem,
+                   hdr_dev2_label_elem,
+                   text("desc ")});
+
+    VirtIODevFeaturesTablePopulate(dev1_desc.features_, dev2_desc.features_,
+                                   true, dev1_desc.dev_type_, tbl);
+
+    auto table = Table(std::move(tbl));
+    table.SelectAll().Border(EMPTY);
+    table.SelectAll().SeparatorVertical(EMPTY);
+    table.SelectRow(0).Border(EMPTY);
+
+    table.SelectRectangle(0, 1, 0, 0).DecorateCells(bold | bgcolor(Color::Blue) | color(Color::Grey15));
+    table.SelectRectangle(4, 4, 0, 0).DecorateCells(bold | bgcolor(Color::Blue) | color(Color::Grey15));
+
+    table.SelectCell(2, 0).DecorateCells(bold | bgcolor(Color::Yellow) | color(Color::Grey15));
+    table.SelectCell(3, 0).DecorateCells(bold | bgcolor(Color::Magenta) | color(Color::Grey15));
+    Element elem = table.Render();
+
+    auto screen = Screen::Create(Dimension::Fit(elem, true));
+    Render(screen, elem);
 
     screen.Print();
     fmt::print("\n");
