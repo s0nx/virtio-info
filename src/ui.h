@@ -11,5 +11,6 @@ namespace ui {
 void ListVirtIODevices();
 void VirtIODevDetailedInfo();
 void VirtIODevFeaturesDiff();
+void ListVirtIODevTypes();
 
 } // namespace ui

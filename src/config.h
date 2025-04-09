@@ -11,7 +11,8 @@ enum class OperationMode
 {
     ListAvailDevs,
     ShowDevInfo,
-    FeaturesDiff
+    FeaturesDiff,
+    ListDevTypes
 };
 
 struct CmdLOpts

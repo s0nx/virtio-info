@@ -414,4 +414,46 @@ void VirtIODevFeaturesDiff()
     fmt::print("\n");
 }
 
+void ListVirtIODevTypes()
+{
+    std::vector<Elements> tbl;
+
+    tbl.push_back({text("id "), text("name ")});
+
+    constexpr auto device_types = magic_enum::enum_values<virtio::VirtIODevType>();
+    for (const auto &dtype : device_types) {
+        Elements row_elems;
+
+        auto idx_elem = hbox({
+            filler(),
+            text(fmt::format("[{}]", e_to_type(dtype)))
+        });
+        row_elems.push_back(idx_elem);
+
+        row_elems.push_back(text(std::string(virtio::VirtIODevTypeName(dtype))) | bold);
+        tbl.push_back(std::move(row_elems));
+    }
+
+    auto table = Table(std::move(tbl));
+    table.SelectAll().Border(EMPTY);
+    table.SelectAll().SeparatorVertical(EMPTY);
+    table.SelectRow(0).Border(EMPTY);
+    table.SelectRow(0).DecorateCells(bold | bgcolor(Color::Blue) | color(Color::Grey15));
+
+    auto doc = vbox({
+        hbox({
+            separatorEmpty(),
+            text(fmt::format("{} device types:", device_types.size())) | bold,
+            filler()
+        }),
+        table.Render()
+    });
+
+    auto screen = Screen::Create(Dimension::Fit(doc, true));
+    Render(screen, doc);
+
+    screen.Print();
+    fmt::print("\n");
+}
+
 } // namespace ui

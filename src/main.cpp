@@ -14,12 +14,22 @@ int main(int argc, char *argv[])
     try {
         cfg::ParseCmdLineOptions(cmdl_opts, argc, argv);
 
-        if (cmdl_opts.mode_ == cfg::OperationMode::ListAvailDevs)
+        switch (cmdl_opts.mode_) {
+        case cfg::OperationMode::ListAvailDevs:
             ui::ListVirtIODevices();
-        else if (cmdl_opts.mode_ == cfg::OperationMode::ShowDevInfo)
+            break;
+        case cfg::OperationMode::ShowDevInfo:
             ui::VirtIODevDetailedInfo();
-        else
+            break;
+        case cfg::OperationMode::FeaturesDiff:
             ui::VirtIODevFeaturesDiff();
+            break;
+        case cfg::OperationMode::ListDevTypes:
+            ui::ListVirtIODevTypes();
+            break;
+        default:
+            break;
+        }
     } catch (std::exception &ex) {
         fmt::print("{}\n", ex.what());
         return EXIT_FAILURE;

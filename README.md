@@ -31,16 +31,17 @@ make -C build -j
 virtio-info [OPTIONS]
 
 OPTIONS:
-  -h,        --help                     Print this help message and exit 
-  -v,        --version                  Print version and exit 
-  -i,        --info < existing device name (e.g. virtio0) > 
-                                        show detailed info about specific VirtIO device 
-             --no-desc                  don't show features bits description 
-             --feat-set                 display only the feature bits that have been set 
-             --no-status                don't show device status bits decoding 
-  -l,        --list                     show registered VirtIO devices 
-  -d,        --diff <device A> <device B> 
-                                        highlight features difference for two devices A and B 
+  -h,        --help                     Print this help message and exit
+             --no-desc                  don't show features bits description
+             --feat-set                 display only the feature bits that have been set
+  -v,        --version                  Print version and exit
+  -i,        --info < existing device name (e.g. virtio0) >
+                                        show detailed info about specific VirtIO device
+             --no-status                don't show device status bits decoding
+  -l,        --list                     show registered VirtIO devices
+  -d,        --diff <device A> <device B>
+                                        highlight features difference for two devices A and B
+  -t,        --types                    show defined VirtIO device types
 ```
 
 ## References

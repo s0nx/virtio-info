@@ -85,6 +85,19 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
         ->check(ExistingDeviceValidator().application_index(0))
         ->check(ExistingDeviceValidator().application_index(1));
 
+    auto sgrp4 = app.add_option_group("+dtype");
+    sgrp4->set_help_flag();
+    sgrp4->excludes(sgrp1);
+    sgrp4->excludes(sgrp2);
+    sgrp4->excludes(sgrp3);
+    sgrp4->add_flag_callback(
+            "-t,--types",
+            [&]() {
+                cmdl_opts.mode_ = OperationMode::ListDevTypes;
+            },
+            "show defined VirtIO device types")
+        ->allow_extra_args(false);
+
     app.add_flag_callback(
             "--no-desc",
             [&]() {
