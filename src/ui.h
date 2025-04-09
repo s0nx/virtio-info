@@ -12,5 +12,6 @@ void ListVirtIODevices();
 void VirtIODevDetailedInfo();
 void VirtIODevFeaturesDiff();
 void ListVirtIODevTypes();
+void VirtIODevRawFeaturesInfo();
 
 } // namespace ui

@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
         case cfg::OperationMode::ListDevTypes:
             ui::ListVirtIODevTypes();
             break;
+        case cfg::OperationMode::RawFeaturesDecoding:
+            ui::VirtIODevRawFeaturesInfo();
+            break;
         default:
             break;
         }

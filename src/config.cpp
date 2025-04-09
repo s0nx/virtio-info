@@ -8,6 +8,7 @@
 #include <fmt/core.h>
 
 #include <CLI/CLI.hpp>
+#include "magic_enum/magic_enum.hpp"
 
 namespace cfg {
 
@@ -24,6 +25,24 @@ class ExistingDeviceValidator : public CLI::Validator {
                 if(check_res == CLI::detail::path_type::nonexistent) {
                     return "Non-existent VirtIO device: " + device_name;
                 }
+                return std::string{};
+            };
+        }
+};
+
+class ExistingVirtIODevTypeValidator : public CLI::Validator {
+    public:
+        ExistingVirtIODevTypeValidator()
+            : CLI::Validator("VIRTIO_DEV_TYPE")
+        {
+            func_ = [&](std::string &dev_type_id_str) {
+                using CLI::detail::lexical_cast;
+                uint8_t type_id;
+
+                bool converted = lexical_cast(dev_type_id_str, type_id);
+                if (!converted || !magic_enum::enum_contains<virtio::VirtIODevType>(type_id))
+                    return "Illegal device type: " + dev_type_id_str;
+
                 return std::string{};
             };
         }
@@ -97,6 +116,24 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
             },
             "show defined VirtIO device types")
         ->allow_extra_args(false);
+
+    auto sgrp5 = app.add_option_group("+raw_feat");
+    sgrp5->set_help_flag();
+    sgrp5->excludes(sgrp1);
+    sgrp5->excludes(sgrp2);
+    sgrp5->excludes(sgrp3);
+    sgrp5->excludes(sgrp4);
+    sgrp5->add_option_function<std::pair<std::uint8_t, std::uint64_t>>(
+            "-f,--feat",
+            [&](const std::pair<std::uint8_t, std::uint64_t> &val) {
+                cmdl_opts.mode_ = OperationMode::RawFeaturesDecoding;
+                cmdl_opts.dev_type_ = val.first;
+                cmdl_opts.raw_features_ = val.second;
+            },
+            "decode given features for a particular device type")
+        ->option_text("<device type> <features (non-negative)>")
+        ->check(ExistingVirtIODevTypeValidator().application_index(0))
+        ->check(CLI::Range((uint64_t)1, std::numeric_limits<uint64_t>::max()));
 
     app.add_flag_callback(
             "--no-desc",

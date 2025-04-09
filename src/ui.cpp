@@ -456,4 +456,22 @@ void ListVirtIODevTypes()
     fmt::print("\n");
 }
 
+void VirtIODevRawFeaturesInfo()
+{
+    auto feat_elem = VirtIODevCreateFeaturesElement(cmdl_opts.raw_features_,
+                                                    virtio::VirtIODevType {cmdl_opts.dev_type_});
+
+    auto doc = vbox({
+        text(fmt::format(" type: [{}] -> {}", cmdl_opts.dev_type_,
+                         virtio::VirtIODevTypeName(virtio::VirtIODevType{cmdl_opts.dev_type_}))) | bold,
+        feat_elem
+    });
+
+    auto screen = Screen::Create(Dimension::Fit(doc, true));
+    Render(screen, doc);
+
+    screen.Print();
+    fmt::print("\n");
+}
+
 } // namespace ui

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 namespace cfg {
 
@@ -12,7 +13,8 @@ enum class OperationMode
     ListAvailDevs,
     ShowDevInfo,
     FeaturesDiff,
-    ListDevTypes
+    ListDevTypes,
+    RawFeaturesDecoding
 };
 
 struct CmdLOpts
@@ -20,6 +22,9 @@ struct CmdLOpts
     OperationMode              mode_ {OperationMode::ListAvailDevs};
     std::string      first_dev_name_ {};
     std::string     second_dev_name_ {};
+    uint8_t	           dev_type_ {0};
+    uint64_t	       raw_features_ {0};
+
     // do not show bit description
     bool               no_feat_desc_ {false};
     // show only the features bits that have been set
