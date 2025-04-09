@@ -243,8 +243,10 @@ DevFeaturesTablePopulate(const uint64_t dev1_features, const uint64_t dev2_featu
             row_elems.push_back(dev1_bit_elem);
             row_elems.push_back(dev2_bit_elem);
 
-            auto field_desc_elem = text(std::string{desc_fun(field)});
-            row_elems.push_back(field_desc_elem);
+            if (!cmdl_opts.no_feat_desc_) {
+                auto field_desc_elem = text(std::string{desc_fun(field)});
+                row_elems.push_back(field_desc_elem);
+            }
 
             tbl.push_back(std::move(row_elems));
         }
@@ -384,10 +386,11 @@ void VirtIODevFeaturesDiff()
 
     // table header for diff mode
     std::vector<Elements> tbl;
-    tbl.push_back({text("bit "), text("ft "),
-                   hdr_dev1_label_elem,
-                   hdr_dev2_label_elem,
-                   text("desc ")});
+    Elements tbl_hdr_elems{text("bit "), text("ft "), hdr_dev1_label_elem, hdr_dev2_label_elem};
+    if (!cmdl_opts.no_feat_desc_)
+        tbl_hdr_elems.push_back(text("desc "));
+
+    tbl.push_back(tbl_hdr_elems);
 
     VirtIODevFeaturesTablePopulate(dev1_desc.features_, dev2_desc.features_,
                                    true, dev1_desc.dev_type_, tbl);

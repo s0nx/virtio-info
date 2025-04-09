@@ -50,20 +50,6 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
         ->check(ExistingDeviceValidator());
 
     sgrp1->add_flag_callback(
-            "--no-desc",
-            [&]() {
-                cmdl_opts.no_feat_desc_ = true;
-            },
-            "don't show features bits description");
-
-    sgrp1->add_flag_callback(
-            "--feat-set",
-            [&]() {
-                cmdl_opts.feat_set_bits_only_ = true;
-            },
-            "display only the feature bits that have been set");
-
-    sgrp1->add_flag_callback(
             "--no-status",
             [&]() {
                 cmdl_opts.no_status_ = true;
@@ -98,6 +84,20 @@ void ParseCmdLineOptions(CmdLOpts &cmdl_opts, int argc, char *argv[])
         ->option_text("<device A> <device B>")
         ->check(ExistingDeviceValidator().application_index(0))
         ->check(ExistingDeviceValidator().application_index(1));
+
+    app.add_flag_callback(
+            "--no-desc",
+            [&]() {
+                cmdl_opts.no_feat_desc_ = true;
+            },
+            "don't show features bits description");
+
+    app.add_flag_callback(
+            "--feat-set",
+            [&]() {
+                cmdl_opts.feat_set_bits_only_ = true;
+            },
+            "display only the feature bits that have been set");
 
     app.add_flag("-v, --version",
             [](std::int64_t) {
