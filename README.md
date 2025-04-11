@@ -1,6 +1,4 @@
-![virtio_info_screen](https://github.com/user-attachments/assets/ec4858ff-c961-42b8-894b-e43cf8a0eb98)
-![virtio_info_diff_mode png](https://github.com/user-attachments/assets/3449faad-f6b2-4b0b-863d-a46e56b08ced)
-
+![virtio_info_3](https://github.com/user-attachments/assets/5ac53202-9b58-4b5b-8187-475f5d9895e9)
 
 # virtio-info
 This simple tool allows to quickly identify all VirtIO devices currently registered.  
