@@ -3,6 +3,7 @@
 
 #include "virtio_bus.h"
 
+#include <algorithm>
 #include <bitset>
 #include <fstream>
 #include <fmt/core.h>
@@ -97,6 +98,9 @@ DevGetFeatures(const fs::path &vd_dev_path)
         fmt::print("Failed to read device features for {}\n", vd_dev_path.c_str());
         throw std::runtime_error("Failed to process VirtIO device");
     }
+
+    // see drivers/virtio/virtio.c: features_show()
+    std::ranges::reverse(tmp_buf);
 
     std::bitset<virtio_dev_features_buf_len> feat_bset(tmp_buf);
     return feat_bset.to_ulong();

@@ -414,7 +414,7 @@ constexpr std::string_view VirtIONetDevFeatureDesc(const VirtIONetFeature featur
     case VirtIONetFeature::VIRTIO_NET_F_RSC_EXT:
 	return "host supports duplicated ACKs, extended coalescing info";
     case VirtIONetFeature::VIRTIO_NET_F_STANDBY:
-	return "host can cct as standby for another device with the same MAC";
+	return "host can act as standby for another device with the same MAC";
     case VirtIONetFeature::VIRTIO_NET_F_SPEED_DUPLEX:
 	return "host reports linkspeed and duplex";
     default:
