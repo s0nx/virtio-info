@@ -17,6 +17,15 @@ using namespace ftxui;
 
 namespace ui {
 
+static void RenderOnScreen(Element elem)
+{
+    auto screen = Screen::Create(Dimension::Fit(elem, true));
+    Render(screen, elem);
+
+    screen.Print();
+    fmt::print("\n");
+}
+
 void ListVirtIODevices()
 {
     auto devs = virtio::GetVirtioDevMap();
@@ -66,11 +75,7 @@ void ListVirtIODevices()
         table.Render()
     });
 
-    auto screen = Screen::Create(Dimension::Fit(doc, true));
-    Render(screen, doc);
-
-    screen.Print();
-    fmt::print("\n");
+    RenderOnScreen(doc);
 }
 
 static Element
@@ -340,12 +345,7 @@ void VirtIODevDetailedInfo()
     elems.push_back(VirtIODevCreateFeaturesElement(dev_desc.features_,
                                                    dev_desc.dev_type_));
 
-    auto doc = vbox(elems);
-    auto screen = Screen::Create(Dimension::Fit(doc, true));
-    Render(screen, doc);
-
-    screen.Print();
-    fmt::print("\n");
+    RenderOnScreen(vbox(elems));
 }
 
 void VirtIODevFeaturesDiff()
@@ -405,13 +405,8 @@ void VirtIODevFeaturesDiff()
 
     table.SelectCell(2, 0).DecorateCells(bold | bgcolor(Color::Yellow) | color(Color::Grey15));
     table.SelectCell(3, 0).DecorateCells(bold | bgcolor(Color::Magenta) | color(Color::Grey15));
-    Element elem = table.Render();
 
-    auto screen = Screen::Create(Dimension::Fit(elem, true));
-    Render(screen, elem);
-
-    screen.Print();
-    fmt::print("\n");
+    RenderOnScreen(table.Render());
 }
 
 void ListVirtIODevTypes()
@@ -449,11 +444,7 @@ void ListVirtIODevTypes()
         table.Render()
     });
 
-    auto screen = Screen::Create(Dimension::Fit(doc, true));
-    Render(screen, doc);
-
-    screen.Print();
-    fmt::print("\n");
+    RenderOnScreen(doc);
 }
 
 void VirtIODevRawFeaturesInfo()
@@ -467,11 +458,7 @@ void VirtIODevRawFeaturesInfo()
         feat_elem
     });
 
-    auto screen = Screen::Create(Dimension::Fit(doc, true));
-    Render(screen, doc);
-
-    screen.Print();
-    fmt::print("\n");
+    RenderOnScreen(doc);
 }
 
 } // namespace ui
