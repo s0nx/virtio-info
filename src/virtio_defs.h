@@ -193,15 +193,26 @@ static inline bool FeatureBitIsCommon(uint32_t bit_pos)
 #define VIRTIO_COMMON_FIELDS(EE) \
     /* XXX: VIRTIO_CONFIG_NO_LEGACY
        Do we get callbacks when the ring is completely used, even if we've suppressed them? */ \
-    EE(VIRTIO_F_NOTIFY_ON_EMPTY,   24) \
+    EE(VIRTIO_F_NOTIFY_ON_EMPTY,    24) \
     /* XXX: VIRTIO_CONFIG_NO_LEGACY
        Can the device handle any descriptor layout? */ \
-    EE(VIRTIO_F_ANY_LAYOUT,        27) \
+    EE(VIRTIO_F_ANY_LAYOUT,         27) \
     /*
      * >>>   transport-specific features start   >>>
      */ \
+    /* XXX: VirtIO ring-specific features
+     * (see include/uapi/linux/virtio_ring.h)
+     *
+     * Indirect buffer descriptors support */ \
+    EE(VIRTIO_RING_F_INDIRECT_DESC, 28) \
+    /* The Guest publishes the used index for which it expects an interrupt
+     * at the end of the avail ring. Host should ignore the avail->flags field.
+     *
+     * The Host publishes the avail index for which it expects a kick
+     * at the end of the used ring. Guest should ignore the used->flags field. */ \
+    EE(VIRTIO_RING_F_EVENT_IDX,     29) \
     /* v1.0 compliant. */ \
-    EE(VIRTIO_F_VERSION_1,         32) \
+    EE(VIRTIO_F_VERSION_1,          32) \
     /*
      * If clear - device has the platform DMA (e.g. IOMMU) bypass quirk feature.
      * If set - use platform DMA tools to access the memory.
@@ -209,27 +220,27 @@ static inline bool FeatureBitIsCommon(uint32_t bit_pos)
      * Note the reverse polarity (compared to most other features),
      * this is for compatibility with legacy systems.
      */ \
-    EE(VIRTIO_F_ACCESS_PLATFORM,   33) \
+    EE(VIRTIO_F_ACCESS_PLATFORM,    33) \
     /* This feature indicates support for the packed virtqueue layout. */ \
-    EE(VIRTIO_F_RING_PACKED,       34) \
+    EE(VIRTIO_F_RING_PACKED,        34) \
      /* Inorder feature indicates that all buffers are used by the device
         in the same order in which they have been made available. */ \
-    EE(VIRTIO_F_IN_ORDER,          35) \
+    EE(VIRTIO_F_IN_ORDER,           35) \
     /* This feature indicates that memory accesses by the driver and the
        device are ordered in a way described by the platform. */ \
-    EE(VIRTIO_F_ORDER_PLATFORM,    36) \
+    EE(VIRTIO_F_ORDER_PLATFORM,     36) \
     /* Does the device support Single Root I/O Virtualization? */ \
-    EE(VIRTIO_F_SR_IOV,            37) \
+    EE(VIRTIO_F_SR_IOV,             37) \
     /* This feature indicates that the driver passes extra data (besides
        identifying the virtqueue) in its device notifications. */ \
-    EE(VIRTIO_F_NOTIFICATION_DATA, 38) \
+    EE(VIRTIO_F_NOTIFICATION_DATA,  38) \
     /* This feature indicates that the driver uses the data provided by the device
        as a virtqueue identifier in available buffer notifications. */ \
-    EE(VIRTIO_F_NOTIF_CONFIG_DATA, 39) \
+    EE(VIRTIO_F_NOTIF_CONFIG_DATA,  39) \
     /* This feature indicates that the driver can reset a queue individually. */ \
-    EE(VIRTIO_F_RING_RESET,        40) \
+    EE(VIRTIO_F_RING_RESET,         40) \
     /* This feature indicates that the device support administration virtqueues. */ \
-    EE(VIRTIO_F_ADMIN_VQ,          41)
+    EE(VIRTIO_F_ADMIN_VQ,           41)
     /*
      * <<<   transport-specific features end   <<<
      */
@@ -249,6 +260,13 @@ VirtIOCommonDevFeatureDesc(const VirtIOCommonFeature feature)
 	    return "guest receives notifications when the ring is fully used";
     case VirtIOCommonFeature::VIRTIO_F_ANY_LAYOUT:
 	    return "host device can handle any descriptor layout";
+
+    // ring buffer specific bits
+    case VirtIOCommonFeature::VIRTIO_RING_F_INDIRECT_DESC:
+	    return "indirect ring buffer descriptors support";
+    case VirtIOCommonFeature::VIRTIO_RING_F_EVENT_IDX:
+	    return "used/available index event enabled";
+
     case VirtIOCommonFeature::VIRTIO_F_VERSION_1:
 	    return "v1.0 spec compliant";
     case VirtIOCommonFeature::VIRTIO_F_ACCESS_PLATFORM:
