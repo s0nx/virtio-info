@@ -182,6 +182,98 @@ static inline bool FeatureBitIsTransport(uint32_t bit_pos)
 	   bit_pos <= feature_bit_transport_end;
 }
 
+constexpr uint32_t feature_bit_common_start = 24;
+static inline bool FeatureBitIsCommon(uint32_t bit_pos)
+{
+    return bit_pos >= feature_bit_common_start &&
+	   bit_pos <= feature_bit_transport_end;
+}
+
+#define EE(name, bpos) name = bpos,
+#define VIRTIO_COMMON_FIELDS(EE) \
+    /* XXX: VIRTIO_CONFIG_NO_LEGACY
+       Do we get callbacks when the ring is completely used, even if we've suppressed them? */ \
+    EE(VIRTIO_F_NOTIFY_ON_EMPTY,   24) \
+    /* XXX: VIRTIO_CONFIG_NO_LEGACY
+       Can the device handle any descriptor layout? */ \
+    EE(VIRTIO_F_ANY_LAYOUT,        27) \
+    /*
+     * >>>   transport-specific features start   >>>
+     */ \
+    /* v1.0 compliant. */ \
+    EE(VIRTIO_F_VERSION_1,         32) \
+    /*
+     * If clear - device has the platform DMA (e.g. IOMMU) bypass quirk feature.
+     * If set - use platform DMA tools to access the memory.
+     *
+     * Note the reverse polarity (compared to most other features),
+     * this is for compatibility with legacy systems.
+     */ \
+    EE(VIRTIO_F_ACCESS_PLATFORM,   33) \
+    /* This feature indicates support for the packed virtqueue layout. */ \
+    EE(VIRTIO_F_RING_PACKED,       34) \
+     /* Inorder feature indicates that all buffers are used by the device
+        in the same order in which they have been made available. */ \
+    EE(VIRTIO_F_IN_ORDER,          35) \
+    /* This feature indicates that memory accesses by the driver and the
+       device are ordered in a way described by the platform. */ \
+    EE(VIRTIO_F_ORDER_PLATFORM,    36) \
+    /* Does the device support Single Root I/O Virtualization? */ \
+    EE(VIRTIO_F_SR_IOV,            37) \
+    /* This feature indicates that the driver passes extra data (besides
+       identifying the virtqueue) in its device notifications. */ \
+    EE(VIRTIO_F_NOTIFICATION_DATA, 38) \
+    /* This feature indicates that the driver uses the data provided by the device
+       as a virtqueue identifier in available buffer notifications. */ \
+    EE(VIRTIO_F_NOTIF_CONFIG_DATA, 39) \
+    /* This feature indicates that the driver can reset a queue individually. */ \
+    EE(VIRTIO_F_RING_RESET,        40) \
+    /* This feature indicates that the device support administration virtqueues. */ \
+    EE(VIRTIO_F_ADMIN_VQ,          41)
+    /*
+     * <<<   transport-specific features end   <<<
+     */
+
+// Common feature bits for virtio devices.
+// Mostly contains transport-specific stuff.
+enum class VirtIOCommonFeature : uint32_t
+{
+    VIRTIO_COMMON_FIELDS(EE)
+};
+
+constexpr std::string_view
+VirtIOCommonDevFeatureDesc(const VirtIOCommonFeature feature)
+{
+    switch (feature) {
+    case VirtIOCommonFeature::VIRTIO_F_NOTIFY_ON_EMPTY:
+	    return "guest receives notifications when the ring is fully used";
+    case VirtIOCommonFeature::VIRTIO_F_ANY_LAYOUT:
+	    return "host device can handle any descriptor layout";
+    case VirtIOCommonFeature::VIRTIO_F_VERSION_1:
+	    return "v1.0 spec compliant";
+    case VirtIOCommonFeature::VIRTIO_F_ACCESS_PLATFORM:
+	    return "use platform DMA tools to access the memory";
+    case VirtIOCommonFeature::VIRTIO_F_RING_PACKED:
+	    return "packed virtqueue layout supported";
+    case VirtIOCommonFeature::VIRTIO_F_IN_ORDER:
+	    return "device uses buffer in order they've been made available";
+    case VirtIOCommonFeature::VIRTIO_F_ORDER_PLATFORM:
+	    return "memory accesses by device/driver are platform-defined";
+    case VirtIOCommonFeature::VIRTIO_F_SR_IOV:
+	    return "SR-IOV support";
+    case VirtIOCommonFeature::VIRTIO_F_NOTIFICATION_DATA:
+	    return "guest -> host notification contains extra data";
+    case VirtIOCommonFeature::VIRTIO_F_NOTIF_CONFIG_DATA:
+	    return "guest -> host notification has virtqueue idx as data";
+    case VirtIOCommonFeature::VIRTIO_F_RING_RESET:
+	    return "guest supports selective queue reset";
+    case VirtIOCommonFeature::VIRTIO_F_ADMIN_VQ:
+	    return "host supports admin vq";
+    default:
+        return "< - >";
+    }
+}
+
 // Feature bits for network card virtio device.
 // XXX: this enum contains not only network-specific features, but transport-specific
 // bits as well. These transport-specific bits are 28 through 42.
@@ -212,57 +304,7 @@ enum class VirtIONetFeature : uint32_t
     VIRTIO_NET_F_MQ                  = 22, // Device supports automatic Receive Flow Steering
     VIRTIO_NET_F_CTRL_MAC_ADDR       = 23, // Set MAC address
 
-
-    // XXX: VIRTIO_CONFIG_NO_LEGACY
-    // Do we get callbacks when the ring is completely used, even if we've suppressed them?
-    VIRTIO_F_NOTIFY_ON_EMPTY 	 = 24,
-
-    // XXX: VIRTIO_CONFIG_NO_LEGACY
-    // Can the device handle any descriptor layout?
-    VIRTIO_F_ANY_LAYOUT	     	 = 27,
-
-    // >>>   transport-specific features start   >>>
-
-    // v1.0 compliant. */
-    VIRTIO_F_VERSION_1 	     	 = 32,
-
-    //
-    // If clear - device has the platform DMA (e.g. IOMMU) bypass quirk feature.
-    // If set - use platform DMA tools to access the memory.
-    //
-    // Note the reverse polarity (compared to most other features),
-    // this is for compatibility with legacy systems.
-    VIRTIO_F_ACCESS_PLATFORM     = 33,
-
-    // This feature indicates support for the packed virtqueue layout. */
-    VIRTIO_F_RING_PACKED	 = 34,
-
-     // Inorder feature indicates that all buffers are used by the device
-     // in the same order in which they have been made available.
-    VIRTIO_F_IN_ORDER	 	 = 35,
-
-    // This feature indicates that memory accesses by the driver and the
-    // device are ordered in a way described by the platform.
-    VIRTIO_F_ORDER_PLATFORM	 = 36,
-
-    // Does the device support Single Root I/O Virtualization?
-    VIRTIO_F_SR_IOV		 = 37,
-
-    // This feature indicates that the driver passes extra data (besides
-    // identifying the virtqueue) in its device notifications.
-    VIRTIO_F_NOTIFICATION_DATA   = 38,
-
-    // This feature indicates that the driver uses the data provided by the device
-    // as a virtqueue identifier in available buffer notifications.
-    VIRTIO_F_NOTIF_CONFIG_DATA   = 39,
-
-    // This feature indicates that the driver can reset a queue individually.
-    VIRTIO_F_RING_RESET	 	 = 40,
-
-    // This feature indicates that the device support administration virtqueues.
-    VIRTIO_F_ADMIN_VQ	 	 = 41,
-
-    // <<<   transport-specific features end   <<<
+    VIRTIO_COMMON_FIELDS(EE)
 
     VIRTIO_NET_F_DEVICE_STATS = 50, // Device can provide device-level statistics.
     VIRTIO_NET_F_VQ_NOTF_COAL = 52, // Device supports virtqueue notification coalescing
@@ -275,7 +317,7 @@ enum class VirtIONetFeature : uint32_t
     VIRTIO_NET_F_RSS          = 60, // Supports RSS RX steering
     VIRTIO_NET_F_RSC_EXT      = 61, // extended coalescing info
     VIRTIO_NET_F_STANDBY      = 62, // Act as standby for another device with the same MAC.
-    VIRTIO_NET_F_SPEED_DUPLEX = 63  // Device set linkspeed and duplex
+    VIRTIO_NET_F_SPEED_DUPLEX = 63,  // Device set linkspeed and duplex
 
 };
 
@@ -328,70 +370,6 @@ constexpr std::string_view VirtIONetDevFeatureDesc(const VirtIONetFeature featur
 	return "device supports auto Receive Flow Steering";
     case VirtIONetFeature::VIRTIO_NET_F_CTRL_MAC_ADDR:
 	return "set MAC address";
-
-
-    // XXX: VIRTIO_CONFIG_NO_LEGACY
-    // Do we get callbacks when the ring is completely used, even if we've suppressed them?
-    case VirtIONetFeature::VIRTIO_F_NOTIFY_ON_EMPTY:
-	return "guest receives notifications when the ring is fully used";
-
-    // XXX: VIRTIO_CONFIG_NO_LEGACY
-    // Can the device handle any descriptor layout?
-    case VirtIONetFeature::VIRTIO_F_ANY_LAYOUT:
-	return "host device can handle any descriptor layout";
-
-    // >>>   transport-specific features start   >>>
-
-    // v1.0 compliant. */
-    case VirtIONetFeature::VIRTIO_F_VERSION_1:
-	return "v1.0 spec compliant";
-
-    //
-    // If clear - device has the platform DMA (e.g. IOMMU) bypass quirk feature.
-    // If set - use platform DMA tools to access the memory.
-    //
-    // Note the reverse polarity (compared to most other features),
-    // this is for compatibility with legacy systems.
-    case VirtIONetFeature::VIRTIO_F_ACCESS_PLATFORM:
-	return "use platform DMA tools to access the memory";
-
-    // This feature indicates support for the packed virtqueue layout. */
-    case VirtIONetFeature::VIRTIO_F_RING_PACKED:
-	return "packed virtqueue layout supported";
-
-     // Inorder feature indicates that all buffers are used by the device
-     // in the same order in which they have been made available.
-    case VirtIONetFeature::VIRTIO_F_IN_ORDER:
-	return "device uses buffer in order they've been made available";
-
-    // This feature indicates that memory accesses by the driver and the
-    // device are ordered in a way described by the platform.
-    case VirtIONetFeature::VIRTIO_F_ORDER_PLATFORM:
-	return "memory accesses by device/driver are platform-defined";
-
-    // Does the device support Single Root I/O Virtualization?
-    case VirtIONetFeature::VIRTIO_F_SR_IOV:
-	return "SR-IOV support";
-
-    // This feature indicates that the driver passes extra data (besides
-    // identifying the virtqueue) in its device notifications.
-    case VirtIONetFeature::VIRTIO_F_NOTIFICATION_DATA:
-	return "guest -> host notification contains extra data";
-
-    // This feature indicates that the driver uses the data provided by the device
-    // as a virtqueue identifier in available buffer notifications.
-    case VirtIONetFeature::VIRTIO_F_NOTIF_CONFIG_DATA:
-	return "guest -> host notification has virtqueue idx as data";
-
-    // This feature indicates that the driver can reset a queue individually.
-    case VirtIONetFeature::VIRTIO_F_RING_RESET:
-	return "guest supports selective queue reset";
-
-    // This feature indicates that the device support administration virtqueues.
-    case VirtIONetFeature::VIRTIO_F_ADMIN_VQ:
-	return "host supports admin vq";
-
-    // <<<   transport-specific features end   <<<
 
     case VirtIONetFeature::VIRTIO_NET_F_DEVICE_STATS:
 	return "device can provide device-level statistics";

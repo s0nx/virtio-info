@@ -4,7 +4,6 @@
 #pragma once
 
 #include "config.h"
-#include "virtio_bus.h"
 
 namespace ui {
 

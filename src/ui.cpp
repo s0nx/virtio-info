@@ -2,6 +2,8 @@
 // Copyright (C) 2025 Petr Vyazovik <xen@f-m.fm>
 
 #include "ui.h"
+#include "virtio_bus.h"
+
 #include <fmt/core.h>
 
 #include <vector>
@@ -188,8 +190,18 @@ DevFeaturesTablePopulate(const uint64_t dev1_features, const uint64_t dev2_featu
             row_elems.push_back(bit_name_elem);
 
             if (!cmdl_opts.no_feat_desc_) {
-                auto field_desc_elem =
-                    text(std::string{desc_fun(field)});
+                bool is_feature_common =
+                    virtio::FeatureBitIsCommon(e_to_type(field));
+                std::string_view bit_desc;
+                if (is_feature_common) {
+                    auto common =
+                        magic_enum::enum_cast<virtio::VirtIOCommonFeature>(magic_enum::enum_integer(field));
+                    bit_desc = virtio::VirtIOCommonDevFeatureDesc(common.value());
+                } else {
+                    bit_desc = desc_fun(field);
+                }
+
+                auto field_desc_elem = text(std::string{bit_desc});
                 if (!bit_is_set)
                     field_desc_elem |= dim;
 
@@ -249,7 +261,17 @@ DevFeaturesTablePopulate(const uint64_t dev1_features, const uint64_t dev2_featu
             row_elems.push_back(dev2_bit_elem);
 
             if (!cmdl_opts.no_feat_desc_) {
-                auto field_desc_elem = text(std::string{desc_fun(field)});
+                bool is_feature_common =
+                    virtio::FeatureBitIsCommon(e_to_type(field));
+                std::string_view bit_desc;
+                if (is_feature_common) {
+                    auto common =
+                        magic_enum::enum_cast<virtio::VirtIOCommonFeature>(magic_enum::enum_integer(field));
+                    bit_desc = virtio::VirtIOCommonDevFeatureDesc(common.value());
+                } else {
+                    bit_desc = desc_fun(field);
+                }
+                auto field_desc_elem = text(std::string{bit_desc});
                 row_elems.push_back(field_desc_elem);
             }
 
